@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<configuration>
+    <properties resource="variable.properties"/>
+
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <datasource type="UNPOOLED">
+                <property name="driver" value=""/>
+                <property name="url" value=""/>
+                <property name="username" value=""/>
+                <property name="password" value=""/>
+            </datasource>
+        </environment>
+    </environments>
+
+    <settings>
+        <setting name="cacheEnabled" value="true"/>
+        <setting name="vfsImpl" value="com.pcz.mybatis.core.io.DefaultVFS"/>
+        <setting name="logImpl" value="SLF4J"/>
+
+        <setting name="autoMappingBehavior" value="NONE"/>
+        <setting name="autoMappingUnknownColumnBehavior" value="WARNING"/>
+        <setting name="cacheEnabled" value="false"/>
+        <setting name="proxyFactory" value="CGLIB"/>
+        <setting name="lazyLoadingEnabled" value="true"/>
+        <setting name="aggressiveLazyLoading" value="true"/>
+        <setting name="useColumnLabel" value="false"/>
+        <setting name="useGeneratedKeys" value="true"/>
+        <setting name="defaultExecutorType" value="BATCH"/>
+        <setting name="defaultStatementTimeout" value="10"/>
+        <setting name="defaultFetchSize" value="100"/>
+        <setting name="defaultResultSetType" value="SCROLL_INSENSITIVE"/>
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <setting name="safeRowBoundsEnabled" value="true"/>
+        <setting name="localCacheScope" value="STATEMENT"/>
+        <setting name="jdbcTypeForNull" value="NULL"/>
+        <setting name="lazyLoadTriggerMethods" value="equals,clone,hashCode,toString"/>
+        <setting name="safeResultHandlerEnabled" value="false"/>
+        <setting name="defaultScriptingLanguage" value="com.pcz.mybatis.core.scripting.defaults.RawLanguageDriver"/>
+        <setting name="callSettersOnNulls" value="true"/>
+        <setting name="logPrefix" value="mybatis_"/>
+    </settings>
+
+    <typeAliases>
+        <package name="com.pcz.mybatis.core.builder.domain"/>
+        <typeAlias type="com.pcz.mybatis.core.builder.domain.User"/>
+        <typeAlias alias="blog" type="com.pcz.mybatis.core.builder.domain.Blog"/>
+    </typeAliases>
+
+    <plugins>
+        <plugin interceptor="com.pcz.mybatis.core.builder.plugin.CustomPlugin">
+            <property name="name" value="pcz"/>
+        </plugin>
+    </plugins>
+
+    <objectFactory type="com.pcz.mybatis.core.builder.factory.CustomObjectFactory"/>
+
+    <objectWrapperFactory type="com.pcz.mybatis.core.builder.factory.CustomObjectWrapperFactory"/>
+
+    <reflectorFactory type="com.pcz.mybatis.core.builder.factory.CustomReflectorFactory"/>
+
+    <databaseIdProvider type="DB_VENDOR">
+        <property name="Apache Derby" value="derby"/>
+    </databaseIdProvider>
+
+    <typeHandlers>
+        <typeHandler javaType="String" jdbcType="VARCHAR"
+                     handler="com.pcz.mybatis.core.builder.typehandler.CustomStringTypeHandler"/>
+        <package name="com.pcz.mybatis.core.builder.typehandler"/>
+    </typeHandlers>
+
+    <mappers>
+        <mapper class="com.pcz.mybatis.core.builder.mapper.UserMapper"/>
+    </mappers>
+</configuration>
