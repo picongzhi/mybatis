@@ -134,6 +134,18 @@ public class ClassLoaderWrapper {
     /**
      * 根据类名获取类实例
      *
+     * @param name        类名
+     * @param classLoader 类加载器
+     * @return 类实例
+     * @throws ClassNotFoundException 类没找到异常
+     */
+    public Class<?> classForName(String name, ClassLoader classLoader) throws ClassNotFoundException {
+        return classForName(name, getClassLoaders(classLoader));
+    }
+
+    /**
+     * 根据类名获取类实例
+     *
      * @param name         类名
      * @param classLoaders 类加载器
      * @return 类实例

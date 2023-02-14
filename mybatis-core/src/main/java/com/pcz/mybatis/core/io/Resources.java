@@ -1,9 +1,6 @@
 package com.pcz.mybatis.core.io;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
@@ -167,14 +164,26 @@ public class Resources {
     }
 
     /**
-     * 根据类名获取类实例
+     * 根据资源获取文件
      *
-     * @param className 类名
-     * @return 类实例
-     * @throws ClassNotFoundException 类没找到异常
+     * @param resource 资源
+     * @return 文件
+     * @throws IOException IO 异常
      */
-    public static Class<?> classForName(String className) throws ClassNotFoundException {
-        return classLoaderWrapper.classForName(className);
+    public static File getResourceAsFile(String resource) throws IOException {
+        return new File(getResourceURL(resource).getFile());
+    }
+
+    /**
+     * 根据资源获取文件
+     *
+     * @param classLoader ClassLoader
+     * @param resource    资源
+     * @return 文件
+     * @throws IOException IO 异常
+     */
+    public static File getResourceAsFile(ClassLoader classLoader, String resource) throws IOException {
+        return new File(getResourceURL(classLoader, resource).getFile());
     }
 
     /**
@@ -192,6 +201,21 @@ public class Resources {
     }
 
     /**
+     * 根据 url 获取 Reader
+     *
+     * @param url url
+     * @return Reader
+     * @throws IOException IO 异常
+     */
+    public static Reader getUrlAsReader(String url) throws IOException {
+        if (charset == null) {
+            return new InputStreamReader(getUrlAsStream(url));
+        } else {
+            return new InputStreamReader(getUrlAsStream(url), charset);
+        }
+    }
+
+    /**
      * 根据 url 获取属性
      *
      * @param url url
@@ -205,6 +229,17 @@ public class Resources {
         }
 
         return properties;
+    }
+
+    /**
+     * 根据类名获取类实例
+     *
+     * @param className 类名
+     * @return 类实例
+     * @throws ClassNotFoundException 类没找到异常
+     */
+    public static Class<?> classForName(String className) throws ClassNotFoundException {
+        return classLoaderWrapper.classForName(className);
     }
 
     /**

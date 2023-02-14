@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -105,10 +106,66 @@ public class ResourcesTest {
     }
 
     @Test
-    public void should_get_class_for_name() throws ClassNotFoundException {
-        String name = ResourcesTest.class.getName();
-        Class<?> cls = Resources.classForName(name);
-        Assertions.assertThat(cls).isEqualTo(ResourcesTest.class);
+    public void should_throw_io_exception_to_get_resource_as_reader_when_resource_not_found() {
+        String resource = "notFound";
+        Assertions.assertThatExceptionOfType(IOException.class)
+                .isThrownBy(() -> Resources.getResourceAsReader(resource));
+    }
+
+    @Test
+    public void should_get_resource_as_reader_with_class_loader() throws IOException {
+        String resource = "resources.properties";
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        Reader reader = Resources.getResourceAsReader(classLoader, resource);
+        Assertions.assertThat(reader).isNotNull();
+    }
+
+    @Test
+    public void should_get_resource_as_reader_with_class_loader_and_charset() throws IOException {
+        Resources.setCharset(Charset.defaultCharset());
+
+        String resource = "resources.properties";
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        Reader reader = Resources.getResourceAsReader(classLoader, resource);
+        Assertions.assertThat(reader).isNotNull();
+    }
+
+    @Test
+    public void should_throw_io_exception_to_get_resource_as_reader_with_class_loader_when_resource_not_found() {
+        String resource = "notFound";
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        Assertions.assertThatExceptionOfType(IOException.class)
+                .isThrownBy(() -> Resources.getResourceAsReader(classLoader, resource));
+    }
+
+    @Test
+    public void should_get_resource_as_file() throws IOException {
+        String resource = "resources.properties";
+        File file = Resources.getResourceAsFile(resource);
+        Assertions.assertThat(file).isNotNull();
+    }
+
+    @Test
+    public void should_throw_io_exception_to_get_resource_as_file_when_resource_not_found() {
+        String resource = "notFound";
+        Assertions.assertThatExceptionOfType(IOException.class)
+                .isThrownBy(() -> Resources.getResourceAsFile(resource));
+    }
+
+    @Test
+    public void should_get_resource_as_file_with_class_loader() throws IOException {
+        String resource = "resources.properties";
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        File file = Resources.getResourceAsFile(classLoader, resource);
+        Assertions.assertThat(file).isNotNull();
+    }
+
+    @Test
+    public void should_throw_io_exception_to_get_resource_as_file_with_class_loader_when_resource_not_found() {
+        String resource = "notFound";
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        Assertions.assertThatExceptionOfType(IOException.class)
+                .isThrownBy(() -> Resources.getResourceAsFile(classLoader, resource));
     }
 
     @Test
@@ -119,9 +176,39 @@ public class ResourcesTest {
     }
 
     @Test
+    public void should_get_url_as_reader() throws IOException {
+        String url = "https://www.baidu.com";
+        Reader reader = Resources.getUrlAsReader(url);
+        Assertions.assertThat(reader).isNotNull();
+    }
+
+    @Test
+    public void should_get_url_as_reader_with_charset() throws IOException {
+        Resources.setCharset(Charset.defaultCharset());
+
+        String url = "https://www.baidu.com";
+        Reader reader = Resources.getUrlAsReader(url);
+        Assertions.assertThat(reader).isNotNull();
+    }
+
+    @Test
     public void should_get_url_as_properties() throws IOException {
         String url = "https://www.baidu.com";
         Properties properties = Resources.getUrlAsProperties(url);
         Assertions.assertThat(properties).isNotNull();
+    }
+
+    @Test
+    public void should_get_charset() {
+        Resources.setCharset(Charset.defaultCharset());
+        Charset charset = Resources.getCharset();
+        Assertions.assertThat(charset).isNotNull();
+    }
+
+    @Test
+    public void should_get_class_for_name() throws ClassNotFoundException {
+        String name = ResourcesTest.class.getName();
+        Class<?> cls = Resources.classForName(name);
+        Assertions.assertThat(cls).isEqualTo(ResourcesTest.class);
     }
 }

@@ -110,7 +110,7 @@ public class ResolveUtil<T> {
     }
 
     /**
-     * 测试接口
+     * 检测接口
      */
     public interface Test {
         /**
