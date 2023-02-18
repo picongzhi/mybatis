@@ -1,6 +1,8 @@
 package com.pcz.mybatis.core.builder;
 
 import com.pcz.mybatis.core.cache.Cache;
+import com.pcz.mybatis.core.cache.decorators.LruCache;
+import com.pcz.mybatis.core.cache.impl.PerpetualCache;
 import com.pcz.mybatis.core.executor.ErrorContext;
 import com.pcz.mybatis.core.mapping.*;
 import com.pcz.mybatis.core.session.Configuration;
@@ -18,14 +20,24 @@ import java.util.Properties;
  */
 public class MapperBuilderAssistant extends BaseBuilder {
     /**
+     * 当前命名空间
+     */
+    private String currentNamespace;
+
+    /**
      * 资源
      */
     private final String resource;
 
     /**
-     * 当前命名空间
+     * 当前缓存
      */
-    private String currentNamespace;
+    private Cache currentCache;
+
+    /**
+     * 引用缓存是否未解决
+     */
+    private boolean unresolvedCacheRef;
 
     public MapperBuilderAssistant(Configuration configuration, String resource) {
         super(configuration);
@@ -41,9 +53,33 @@ public class MapperBuilderAssistant extends BaseBuilder {
         this.currentNamespace = currentNamespace;
     }
 
-    public Cache useCacheRef(String namespace) {
-        // TODO: 实现 useCacheRef
-        return null;
+    /**
+     * 使用引用缓存
+     *
+     * @param cacheRefNamespace 引用缓存的命名空间
+     * @return 缓存
+     */
+    public Cache useCacheRef(String cacheRefNamespace) {
+        if (cacheRefNamespace == null) {
+            throw new BuilderException("cache-ref element requires a namespace attribute.");
+        }
+
+        try {
+            unresolvedCacheRef = true;
+            Cache cache = configuration.getCache(cacheRefNamespace);
+            if (cache == null) {
+                throw new IncompleteElementException(
+                        "No cache for namespace '" + cacheRefNamespace + "' could be found.");
+            }
+
+            currentCache = cache;
+            unresolvedCacheRef = false;
+
+            return cache;
+        } catch (IllegalArgumentException e) {
+            throw new IncompleteElementException(
+                    "No cache for namespace '" + cacheRefNamespace + "' could be found.", e);
+        }
     }
 
     public ResultMap addResultMap(String id,
@@ -56,6 +92,18 @@ public class MapperBuilderAssistant extends BaseBuilder {
         return null;
     }
 
+    /**
+     * 使用新的缓存
+     *
+     * @param cacheClass    缓存 Class 实例
+     * @param evictionClass 缓存淘汰策略 Class 实例
+     * @param flushInterval 刷新时间间隔
+     * @param size          缓存竖向
+     * @param readWrite     读写
+     * @param blocking      是否阻塞
+     * @param properties    属性
+     * @return 缓存
+     */
     public Cache useNewCache(Class<? extends Cache> cacheClass,
                              Class<? extends Cache> evictionClass,
                              Long flushInterval,
@@ -63,8 +111,20 @@ public class MapperBuilderAssistant extends BaseBuilder {
                              boolean readWrite,
                              boolean blocking,
                              Properties properties) {
-        // TODO: 实现 useNewCache
-        return null;
+        Cache cache = new CacheBuilder(currentNamespace)
+                .implementation(valueOrDefault(cacheClass, PerpetualCache.class))
+                .addDecorator(valueOrDefault(evictionClass, LruCache.class))
+                .clearInterval(flushInterval)
+                .size(size)
+                .readWrite(readWrite)
+                .blocking(blocking)
+                .properties(properties)
+                .build();
+
+        configuration.addCache(cache);
+        currentCache = cache;
+
+        return cache;
     }
 
     public ParameterMapping buildParameterMapping(Class<?> parameterType,
@@ -132,5 +192,19 @@ public class MapperBuilderAssistant extends BaseBuilder {
         }
 
         return currentNamespace + "." + base;
+    }
+
+    /**
+     * 获取值，如果值为 null，返回默认值
+     *
+     * @param value        值
+     * @param defaultValue 默认值
+     * @param <T>          泛型
+     * @return 结果
+     */
+    private <T> T valueOrDefault(T value, T defaultValue) {
+        return value == null
+                ? defaultValue
+                : value;
     }
 }

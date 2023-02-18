@@ -1,6 +1,7 @@
 package com.pcz.mybatis.core.io;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,6 +49,46 @@ public class ResolveUtil<T> {
      */
     public void setClassLoader(ClassLoader classLoader) {
         this.classLoader = classLoader;
+    }
+
+    /**
+     * 扫描多个包，获取所有实现了指定类的类
+     *
+     * @param parent       父类
+     * @param packageNames 包名
+     * @return 解析工具类实例
+     */
+    public ResolveUtil<T> findImplementations(Class<?> parent, String... packageNames) {
+        if (packageNames == null) {
+            return this;
+        }
+
+        Test test = new IsA(parent);
+        for (String packageName : packageNames) {
+            find(test, packageName);
+        }
+
+        return this;
+    }
+
+    /**
+     * 扫描多个包，获取所有注解了指定注解的类
+     *
+     * @param annotation   注解
+     * @param packageNames 包名
+     * @return 解析工具类实例
+     */
+    public ResolveUtil<T> findAnnotated(Class<? extends Annotation> annotation, String... packageNames) {
+        if (packageNames == null) {
+            return this;
+        }
+
+        Test test = new AnnotatedWith(annotation);
+        for (String packageName : packageNames) {
+            find(test, packageName);
+        }
+
+        return this;
     }
 
     /**
@@ -123,7 +164,7 @@ public class ResolveUtil<T> {
     }
 
     /**
-     * 判断是不是继承自自定的类
+     * 检测是否继承自指定的类
      */
     public static class IsA implements Test {
         /**
@@ -143,6 +184,30 @@ public class ResolveUtil<T> {
         @Override
         public String toString() {
             return "is assignable to " + parent.getSimpleName();
+        }
+    }
+
+    /**
+     * 检测是否注解了指定注解
+     */
+    public static class AnnotatedWith implements Test {
+        /**
+         * 注解
+         */
+        private Class<? extends Annotation> annotation;
+
+        public AnnotatedWith(Class<? extends Annotation> annotation) {
+            this.annotation = annotation;
+        }
+
+        @Override
+        public boolean matches(Class<?> type) {
+            return type != null && type.isAnnotationPresent(annotation);
+        }
+
+        @Override
+        public String toString() {
+            return "annotated with @" + annotation.getSimpleName();
         }
     }
 }

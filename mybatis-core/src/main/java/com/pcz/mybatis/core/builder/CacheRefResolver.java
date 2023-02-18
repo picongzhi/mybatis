@@ -14,7 +14,7 @@ public class CacheRefResolver {
     private final MapperBuilderAssistant assistant;
 
     /**
-     * cache-ref 命名空间
+     * 引用缓存的命名空间
      */
     private final String cacheRefNamespace;
 

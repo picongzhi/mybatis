@@ -4,6 +4,9 @@ import com.pcz.mybatis.core.binding.MapperRegistry;
 import com.pcz.mybatis.core.builder.CacheRefResolver;
 import com.pcz.mybatis.core.builder.ResultMapResolver;
 import com.pcz.mybatis.core.builder.xml.XMLStatementBuilder;
+import com.pcz.mybatis.core.cache.Cache;
+import com.pcz.mybatis.core.cache.decorators.LruCache;
+import com.pcz.mybatis.core.cache.impl.PerpetualCache;
 import com.pcz.mybatis.core.datasource.unpooled.UnpooledDataSourceFactory;
 import com.pcz.mybatis.core.executor.loader.ProxyFactory;
 import com.pcz.mybatis.core.executor.loader.cglib.CglibProxyFactory;
@@ -261,6 +264,11 @@ public class Configuration {
                             ". please check " + savedValue.getResource() + " and " + targetValue.getResource());
 
     /**
+     * 缓存
+     */
+    private final Map<String, Cache> caches = new StrictMap<>("Cache collection");
+
+    /**
      * SQL 片段
      */
     protected final Map<String, XNode> sqlFragments =
@@ -292,13 +300,20 @@ public class Configuration {
     protected final Map<String, String> cacheRefMap = new HashMap<>();
 
     public Configuration() {
+        // 数据源
         typeAliasRegistry.registerAlias("JDBC", JdbcTransactionFactory.class);
         typeAliasRegistry.registerAlias("UNPOOLED", UnpooledDataSourceFactory.class);
 
+        // 缓存
+        typeAliasRegistry.registerAlias("PERPETUAL", PerpetualCache.class);
+        typeAliasRegistry.registerAlias("LRU", LruCache.class);
+
         typeAliasRegistry.registerAlias("DB_VENDOR", VendorDatabaseIdProvider.class);
 
+        // 日志
         typeAliasRegistry.registerAlias("SLF4J", Slf4jImpl.class);
 
+        // 代理
         typeAliasRegistry.registerAlias("CGLIB", CglibProxyFactory.class);
 
         languageDriverRegistry.setDefaultDriverClass(XMLLanguageDriver.class);
@@ -694,6 +709,26 @@ public class Configuration {
      */
     protected void buildAllStatements() {
         // TODO: 实现构建
+    }
+
+    public void addCache(Cache cache) {
+        caches.put(cache.getId(), cache);
+    }
+
+    public Collection<String> getCacheNames() {
+        return caches.keySet();
+    }
+
+    public Collection<Cache> getCaches() {
+        return caches.values();
+    }
+
+    public Cache getCache(String id) {
+        return caches.get(id);
+    }
+
+    public boolean hasCache(String id) {
+        return caches.containsKey(id);
     }
 
     public void setDefaultEnumTypeHandler(Class<? extends TypeHandler> typeHandler) {

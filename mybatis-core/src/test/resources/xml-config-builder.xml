@@ -73,5 +73,6 @@
 
     <mappers>
         <mapper class="com.pcz.mybatis.core.builder.mapper.UserMapper"/>
+        <mapper resource="UserMapper.xml"/>
     </mappers>
 </configuration>
